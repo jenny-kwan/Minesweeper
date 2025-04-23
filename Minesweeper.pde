@@ -76,8 +76,6 @@ public void displayLosingMessage() {
     for (int col = 0; col < NUM_COLS; col++) {
       MSButton button = buttons[row][col];
       if (mines.contains(button)) {
-        button.setLabel("X");
-        button.clicked = true;
       }
     }
   }
@@ -99,7 +97,7 @@ public int countMines(int row, int col) {
   
   for (int r = -1; r <= 1; r++) {
     for (int c = -1; c <= 1; c++) {
-      if (r == 0 && c == 0) continue;
+      if (r == 0 && c == 0) continue; // Skip the current cell
       if (isValid(row + r, col + c) && mines.contains(buttons[row + r][col + c])) {
         numMines++;
       }
@@ -129,25 +127,22 @@ public class MSButton {
   }
 
   public void mousePressed() {
-    if (mouseButton == RIGHT) {
-      flagged = !flagged;
-      if (!flagged) {
-        clicked = false;
-      }
-      return;
-    }
-
-    if (flagged || clicked) return;
-
     clicked = true;
-    if (isMine) {
-      displayLosingMessage(); 
+    if (mouseButton == RIGHT) {
+      flagged = !flagged; // Toggle flagged state on right-click
+      if (!flagged) {
+        clicked = false; // Unclick the button if it's no longer flagged
+      }
     } else {
-      int numMines = countMines(myRow, myCol);
-      if (numMines > 0) {
-        setLabel(numMines);
+      if (isMine) {
+        displayLosingMessage(); 
       } else {
-        revealNeighbors(myRow, myCol);
+        int numMines = countMines(myRow, myCol);
+        if (numMines > 0) {
+          setLabel(numMines);
+        } else {
+          revealNeighbors(myRow, myCol);
+        }
       }
     }
   }
@@ -158,16 +153,11 @@ public class MSButton {
         if (r == 0 && c == 0) continue; 
         int newRow = row + r;
         int newCol = col + c;
-        if (isValid(newRow, newCol)) {
-          MSButton neighbor = buttons[newRow][newCol];
-          if (!neighbor.isClicked() && !neighbor.isMine() && !neighbor.flagged) {
-            neighbor.clicked = true;
-            int neighborMines = countMines(newRow, newCol);
-            if (neighborMines > 0) {
-              neighbor.setLabel(neighborMines);
-            } else {
-              neighbor.revealNeighbors(newRow, newCol); 
-            }
+        if (isValid(newRow, newCol) && !buttons[newRow][newCol].isClicked() && !buttons[newRow][newCol].isMine) {
+          buttons[newRow][newCol].setLabel(countMines(newRow, newCol));
+          buttons[newRow][newCol].clicked = true;
+          if (countMines(newRow, newCol) == 0) {
+            revealNeighbors(newRow, newCol); 
           }
         }
       }
@@ -176,22 +166,24 @@ public class MSButton {
 
   public void draw() {
     if (flagged) {
-      fill(255, 255, 153); // yellow for flagged
+      fill(255, 255, 153); // Yellow background for flagged
     } else if (clicked && isMine) {
-      fill(250, 52, 121); 
+      fill(250, 52, 121); // Mine hit background
     } else if (clicked) {
-      fill(255, 189, 212); 
+      fill(255, 189, 212); // Non-mine clicked background
     } else {
-      fill(255, 122, 169); 
+      fill(255, 122, 169); // Unclicked normal background
     }
-
-    rect(x, y, width, height);
-    fill(0);
-
+    
+    rect(x, y, width, height); // Draw the button as a rectangle
+    fill(0); // Set text color to black for visibility
+    
     if (flagged) {
-      text("F", x + width / 2, y + height / 2);
+      textSize(24); // Adjust text size for the flag
+      text("F", x + width / 2, y + height / 2); // Center the "F" in the button
     } else {
-      text(myLabel, x + width / 2, y + height / 2);
+      textSize(18); // Adjust text size for numbers or other labels
+      text(myLabel, x + width / 2, y + height / 2); // Display label (number or "X")
     }
   }
 
