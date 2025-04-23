@@ -107,10 +107,26 @@ public int countMines(int row, int col) {
   return numMines;
 }
 
+// NEW: Right-click flagging support
+public void mouseEvent(MouseEvent e) {
+  if (e.getAction() == MouseEvent.PRESS && e.getButton() == RIGHT) {
+    float mx = mouseX;
+    float my = mouseY;
+    for (int row = 0; row < NUM_ROWS; row++) {
+      for (int col = 0; col < NUM_COLS; col++) {
+        MSButton b = buttons[row][col];
+        if (mx >= b.x && mx < b.x + b.width && my >= b.y && my < b.y + b.height) {
+          if (!b.clicked) b.toggleFlag();
+        }
+      }
+    }
+  }
+}
+
 public class MSButton {
   private int myRow, myCol;
-  private float x, y, width, height;
-  private boolean clicked, flagged, isMine;
+  public float x, y, width, height;
+  public boolean clicked, flagged, isMine;
   private String myLabel;
 
   public MSButton(int row, int col) {
@@ -127,6 +143,8 @@ public class MSButton {
   }
 
   public void mousePressed() {
+    if (flagged || clicked) return;
+
     clicked = true;
     if (isMine) {
       displayLosingMessage(); 
@@ -170,7 +188,7 @@ public class MSButton {
     
     rect(x, y, width, height);
     fill(0);
-    text(myLabel, x + width / 2, y + height / 2); // Display label (mine count or "You Suck, Loser!")
+    text(myLabel, x + width / 2, y + height / 2);
   }
 
   public void setLabel(String newLabel) {
@@ -191,5 +209,10 @@ public class MSButton {
 
   public void setMine(boolean mineStatus) {
     isMine = mineStatus;
+  }
+
+  public void toggleFlag() {
+    flagged = !flagged;
+    myLabel = flagged ? "F" : "";
   }
 }
