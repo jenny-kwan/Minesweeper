@@ -76,6 +76,7 @@ public void displayLosingMessage() {
     for (int col = 0; col < NUM_COLS; col++) {
       MSButton button = buttons[row][col];
       if (mines.contains(button)) {
+        button.setLabel("X");
       }
     }
   }
@@ -97,7 +98,7 @@ public int countMines(int row, int col) {
   
   for (int r = -1; r <= 1; r++) {
     for (int c = -1; c <= 1; c++) {
-      if (r == 0 && c == 0) continue; // Skip the current cell
+      if (r == 0 && c == 0) continue;
       if (isValid(row + r, col + c) && mines.contains(buttons[row + r][col + c])) {
         numMines++;
       }
@@ -107,26 +108,10 @@ public int countMines(int row, int col) {
   return numMines;
 }
 
-// NEW: Right-click flagging support
-public void mouseEvent(MouseEvent e) {
-  if (e.getAction() == MouseEvent.PRESS && e.getButton() == RIGHT) {
-    float mx = mouseX;
-    float my = mouseY;
-    for (int row = 0; row < NUM_ROWS; row++) {
-      for (int col = 0; col < NUM_COLS; col++) {
-        MSButton b = buttons[row][col];
-        if (mx >= b.x && mx < b.x + b.width && my >= b.y && my < b.y + b.height) {
-          if (!b.clicked) b.toggleFlag();
-        }
-      }
-    }
-  }
-}
-
 public class MSButton {
   private int myRow, myCol;
-  public float x, y, width, height;
-  public boolean clicked, flagged, isMine;
+  private float x, y, width, height;
+  private boolean clicked, flagged, isMine;
   private String myLabel;
 
   public MSButton(int row, int col) {
@@ -143,17 +128,38 @@ public class MSButton {
   }
 
   public void mousePressed() {
-    if (flagged || clicked) return;
-
     clicked = true;
-    if (isMine) {
-      displayLosingMessage(); 
-    } else {
-      int numMines = countMines(myRow, myCol);
-      if (numMines > 0) {
-        setLabel(numMines);
+
+    if (mouseButton == RIGHT) {
+      flagged = !flagged;
+      if (flagged) {
+        setLabel("F");
       } else {
-        revealNeighbors(myRow, myCol);
+        setLabel("");
+        clicked = false;
+      }
+      return;
+    }
+
+    if (mines.contains(this)) {
+      displayLosingMessage();
+    } else {
+      int nearbyMines = countMines(myRow, myCol);
+      if (nearbyMines > 0) {
+        setLabel(nearbyMines);
+      } else {
+        for (int r = -1; r <= 1; r++) {
+          for (int c = -1; c <= 1; c++) {
+            int newRow = myRow + r;
+            int newCol = myCol + c;
+            if (isValid(newRow, newCol)) {
+              MSButton neighbor = buttons[newRow][newCol];
+              if (!neighbor.clicked) {
+                neighbor.mousePressed();
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -161,7 +167,7 @@ public class MSButton {
   public void revealNeighbors(int row, int col) {
     for (int r = -1; r <= 1; r++) {
       for (int c = -1; c <= 1; c++) {
-        if (r == 0 && c == 0) continue; 
+        if (r == 0 && c == 0) continue;
         int newRow = row + r;
         int newCol = col + c;
         if (isValid(newRow, newCol) && !buttons[newRow][newCol].isClicked() && !buttons[newRow][newCol].isMine) {
@@ -177,7 +183,7 @@ public class MSButton {
 
   public void draw() {
     if (flagged) {
-      fill(0);
+      fill(255, 240, 100); // Yellow for flagged
     } else if (clicked && isMine) {
       fill(250, 52, 121); 
     } else if (clicked) {
@@ -209,10 +215,5 @@ public class MSButton {
 
   public void setMine(boolean mineStatus) {
     isMine = mineStatus;
-  }
-
-  public void toggleFlag() {
-    flagged = !flagged;
-    myLabel = flagged ? "F" : "";
   }
 }
