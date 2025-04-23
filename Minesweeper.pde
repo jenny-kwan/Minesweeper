@@ -77,6 +77,7 @@ public void displayLosingMessage() {
       MSButton button = buttons[row][col];
       if (mines.contains(button)) {
         button.setLabel("X");
+        button.clicked = true;
       }
     }
   }
@@ -128,38 +129,25 @@ public class MSButton {
   }
 
   public void mousePressed() {
-    clicked = true;
-
     if (mouseButton == RIGHT) {
       flagged = !flagged;
-      if (flagged) {
-        setLabel("F");
-      } else {
-        setLabel("");
+      if (!flagged) {
         clicked = false;
       }
       return;
     }
 
-    if (mines.contains(this)) {
-      displayLosingMessage();
+    if (flagged || clicked) return;
+
+    clicked = true;
+    if (isMine) {
+      displayLosingMessage(); 
     } else {
-      int nearbyMines = countMines(myRow, myCol);
-      if (nearbyMines > 0) {
-        setLabel(nearbyMines);
+      int numMines = countMines(myRow, myCol);
+      if (numMines > 0) {
+        setLabel(numMines);
       } else {
-        for (int r = -1; r <= 1; r++) {
-          for (int c = -1; c <= 1; c++) {
-            int newRow = myRow + r;
-            int newCol = myCol + c;
-            if (isValid(newRow, newCol)) {
-              MSButton neighbor = buttons[newRow][newCol];
-              if (!neighbor.clicked) {
-                neighbor.mousePressed();
-              }
-            }
-          }
-        }
+        revealNeighbors(myRow, myCol);
       }
     }
   }
@@ -167,14 +155,19 @@ public class MSButton {
   public void revealNeighbors(int row, int col) {
     for (int r = -1; r <= 1; r++) {
       for (int c = -1; c <= 1; c++) {
-        if (r == 0 && c == 0) continue;
+        if (r == 0 && c == 0) continue; 
         int newRow = row + r;
         int newCol = col + c;
-        if (isValid(newRow, newCol) && !buttons[newRow][newCol].isClicked() && !buttons[newRow][newCol].isMine) {
-          buttons[newRow][newCol].setLabel(countMines(newRow, newCol));
-          buttons[newRow][newCol].clicked = true;
-          if (countMines(newRow, newCol) == 0) {
-            revealNeighbors(newRow, newCol); 
+        if (isValid(newRow, newCol)) {
+          MSButton neighbor = buttons[newRow][newCol];
+          if (!neighbor.isClicked() && !neighbor.isMine() && !neighbor.flagged) {
+            neighbor.clicked = true;
+            int neighborMines = countMines(newRow, newCol);
+            if (neighborMines > 0) {
+              neighbor.setLabel(neighborMines);
+            } else {
+              neighbor.revealNeighbors(newRow, newCol); 
+            }
           }
         }
       }
@@ -183,7 +176,7 @@ public class MSButton {
 
   public void draw() {
     if (flagged) {
-      fill(255, 240, 100); // Yellow for flagged
+      fill(255, 255, 153); // yellow for flagged
     } else if (clicked && isMine) {
       fill(250, 52, 121); 
     } else if (clicked) {
@@ -191,10 +184,15 @@ public class MSButton {
     } else {
       fill(255, 122, 169); 
     }
-    
+
     rect(x, y, width, height);
     fill(0);
-    text(myLabel, x + width / 2, y + height / 2);
+
+    if (flagged) {
+      text("F", x + width / 2, y + height / 2);
+    } else {
+      text(myLabel, x + width / 2, y + height / 2);
+    }
   }
 
   public void setLabel(String newLabel) {
