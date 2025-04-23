@@ -97,7 +97,7 @@ public int countMines(int row, int col) {
   
   for (int r = -1; r <= 1; r++) {
     for (int c = -1; c <= 1; c++) {
-      if (r == 0 && c == 0) continue; // Skip the current cell
+      if (r == 0 && c == 0) continue;
       if (isValid(row + r, col + c) && mines.contains(buttons[row + r][col + c])) {
         numMines++;
       }
@@ -128,10 +128,12 @@ public class MSButton {
 
   public void mousePressed() {
     clicked = true;
+    
     if (mouseButton == RIGHT) {
-      flagged = !flagged; // Toggle flagged state on right-click
+      flagged = !flagged;
+      
       if (!flagged) {
-        clicked = false; // Unclick the button if it's no longer flagged
+        clicked = false;
       }
     } else {
       if (isMine) {
@@ -166,24 +168,24 @@ public class MSButton {
 
   public void draw() {
     if (flagged) {
-      fill(255, 255, 153); // Yellow background for flagged
+      fill(255, 255, 153);
     } else if (clicked && isMine) {
-      fill(250, 52, 121); // Mine hit background
+      fill(250, 52, 121);
     } else if (clicked) {
-      fill(255, 189, 212); // Non-mine clicked background
+      fill(255, 189, 212);
     } else {
-      fill(255, 122, 169); // Unclicked normal background
+      fill(255, 122, 169);
     }
     
-    rect(x, y, width, height); // Draw the button as a rectangle
-    fill(0); // Set text color to black for visibility
+    rect(x, y, width, height); 
+    fill(0); 
     
     if (flagged) {
-      textSize(24); // Adjust text size for the flag
-      text("F", x + width / 2, y + height / 2); // Center the "F" in the button
+      textSize(24);
+      text("F", x + width / 2, y + height / 2); 
     } else {
-      textSize(18); // Adjust text size for numbers or other labels
-      text(myLabel, x + width / 2, y + height / 2); // Display label (number or "X")
+      textSize(18); 
+      text(myLabel, x + width / 2, y + height / 2); 
     }
   }
 
