@@ -9,16 +9,13 @@ private ArrayList<MSButton> mines;
 void setup() {
   size(600, 600); 
   textAlign(CENTER, CENTER);
-  
   Interactive.make(this);
-  
   buttons = new MSButton[NUM_ROWS][NUM_COLS];
   for (int row = 0; row < NUM_ROWS; row++) {
     for (int col = 0; col < NUM_COLS; col++) {
       buttons[row][col] = new MSButton(row, col);
     }
   }
-  
   mines = new ArrayList<MSButton>();
   setMines();
 }
@@ -37,11 +34,9 @@ public void setMines() {
 
 public void draw() {
   background(0);
-  
   if (isWon()) {
     displayWinningMessage();
   }
-  
   for (int row = 0; row < NUM_ROWS; row++) {
     for (int col = 0; col < NUM_COLS; col++) {
       buttons[row][col].draw();
@@ -72,11 +67,15 @@ public void displayWinningMessage() {
 }
 
 public void displayLosingMessage() {
-  for (MSButton b : mines) {
-    b.setLabel("X");
-    b.clicked = true;
+  for (int row = 0; row < NUM_ROWS; row++) {
+    for (int col = 0; col < NUM_COLS; col++) {
+      MSButton button = buttons[row][col];
+      if (mines.contains(button)) {
+        button.setLabel("X");
+        button.clicked = true;
+      }
+    }
   }
-
   String message = "You Lose! :(";
   for (int row = NUM_ROWS / 2 - 1; row < NUM_ROWS / 2 + 2; row++) {
     for (int col = NUM_COLS / 2 - 6; col < NUM_COLS / 2 + 6; col++) {
@@ -92,7 +91,6 @@ public boolean isValid(int r, int c) {
 
 public int countMines(int row, int col) {
   int numMines = 0;
-  
   for (int r = -1; r <= 1; r++) {
     for (int c = -1; c <= 1; c++) {
       if (r == 0 && c == 0) continue;
@@ -101,7 +99,6 @@ public int countMines(int row, int col) {
       }
     }
   }
-  
   return numMines;
 }
 
@@ -125,14 +122,11 @@ public class MSButton {
   }
 
   public void mousePressed() {
-    clicked = true;
-    
     if (mouseButton == RIGHT) {
       flagged = !flagged;
-      if (!flagged) {
-        clicked = false;
-      }
-    } else {
+      if (!flagged) clicked = false;
+    } else if (!flagged) {
+      clicked = true;
       if (isMine) {
         displayLosingMessage(); 
       } else {
@@ -152,11 +146,16 @@ public class MSButton {
         if (r == 0 && c == 0) continue; 
         int newRow = row + r;
         int newCol = col + c;
-        if (isValid(newRow, newCol) && !buttons[newRow][newCol].isClicked() && !buttons[newRow][newCol].isMine) {
-          buttons[newRow][newCol].setLabel(countMines(newRow, newCol));
-          buttons[newRow][newCol].clicked = true;
-          if (countMines(newRow, newCol) == 0) {
-            revealNeighbors(newRow, newCol); 
+        if (isValid(newRow, newCol)) {
+          MSButton neighbor = buttons[newRow][newCol];
+          if (!neighbor.isClicked() && !neighbor.isMine() && !neighbor.flagged) {
+            neighbor.clicked = true;
+            int count = countMines(newRow, newCol);
+            if (count > 0) {
+              neighbor.setLabel(count);
+            } else {
+              neighbor.revealNeighbors(newRow, newCol);
+            }
           }
         }
       }
@@ -165,24 +164,17 @@ public class MSButton {
 
   public void draw() {
     if (flagged) {
-      fill(255, 255, 153);
+      fill(255, 0, 0);
     } else if (clicked && isMine) {
-      fill(250, 52, 121);
+      fill(250, 52, 121); 
     } else if (clicked) {
-      fill(255, 189, 212);
+      fill(255, 189, 212); 
     } else {
-      fill(255, 122, 169);
+      fill(255, 122, 169); 
     }
-    
-    rect(x, y, width, height); 
-    fill(0); 
-    
-    textSize(16);
-    if (flagged) {
-      text("F", x + width / 2, y + height / 2); 
-    } else {
-      text(myLabel, x + width / 2, y + height / 2); 
-    }
+    rect(x, y, width, height);
+    fill(0);
+    text(myLabel, x + width / 2, y + height / 2);
   }
 
   public void setLabel(String newLabel) {
