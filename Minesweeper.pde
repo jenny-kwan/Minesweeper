@@ -72,13 +72,11 @@ public void displayWinningMessage() {
 }
 
 public void displayLosingMessage() {
-  for (int row = 0; row < NUM_ROWS; row++) {
-    for (int col = 0; col < NUM_COLS; col++) {
-      MSButton button = buttons[row][col];
-      if (mines.contains(button)) {
-      }
-    }
+  for (MSButton b : mines) {
+    b.setLabel("X");
+    b.clicked = true;
   }
+
   String message = "You Lose! :(";
   for (int row = NUM_ROWS / 2 - 1; row < NUM_ROWS / 2 + 2; row++) {
     for (int col = NUM_COLS / 2 - 6; col < NUM_COLS / 2 + 6; col++) {
@@ -131,7 +129,6 @@ public class MSButton {
     
     if (mouseButton == RIGHT) {
       flagged = !flagged;
-      
       if (!flagged) {
         clicked = false;
       }
@@ -180,11 +177,10 @@ public class MSButton {
     rect(x, y, width, height); 
     fill(0); 
     
+    textSize(16);
     if (flagged) {
-      textSize(24);
       text("F", x + width / 2, y + height / 2); 
     } else {
-      textSize(18); 
       text(myLabel, x + width / 2, y + height / 2); 
     }
   }
